@@ -1,7 +1,7 @@
 /**
  * Junie model definitions for Pi extension provider registration.
  *
- * KNOWN_GRAZIE_MODELS: master list of Grazie model IDs (from Junie CLI v1468.30).
+ * KNOWN_GRAZIE_MODELS: master list of Grazie model IDs (from Junie CLI v3013.7).
  * buildProviderModels(): builds ProviderModelConfig[] for pi.registerProvider().
  * cleanOldModelsJson(): removes stale junie entries from ~/.pi/agent/models.json.
  */
@@ -10,8 +10,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// All known Grazie/Junie model IDs (extracted from Junie CLI v2144.7, 2026-07-04;
-// claude-opus-5 added 2026-07-27, verified live against the Grazie backend).
+// All known Grazie/Junie model IDs (extracted from Junie CLI v3013.7, 2026-09-17;
+// all new models verified live against the Grazie backend).
 // Routing by prefix: claude-* → anthropic passthrough, openai-*/grok-* → OpenAI
 // Responses API passthrough (grok- with X-LLM-Model: grok), gemini-* → Google
 // generateContent passthrough (X-LLM-Model: google).
@@ -24,6 +24,7 @@ export const KNOWN_GRAZIE_MODELS = [
   "claude-opus-4-8",
   "claude-opus-5",
   "claude-fable-5",
+  "claude-fable-5-1",
 
   // OpenAI — passthrough via ingrazzio-cloud-prod /v1/responses (OpenAI Responses API)
   "openai-gpt-5-2",
@@ -32,10 +33,12 @@ export const KNOWN_GRAZIE_MODELS = [
   "openai-gpt-5-6-luna",
   "openai-gpt-5-6-terra",
   "openai-gpt-5-6-sol",
+  "openai-gpt-6-astra",
 
   // xAI — passthrough via ingrazzio-cloud-prod /v1/responses with X-LLM-Model: grok
   "grok-4-3",
   "grok-4-5",
+  "grok-4-6",
 
   // Google — passthrough via the Vertex-style generateContent path with
   // X-LLM-Model: google. Unlike the other families these keep their upstream
@@ -45,8 +48,11 @@ export const KNOWN_GRAZIE_MODELS = [
   "gemini-3-flash-preview",
   "gemini-3.1-pro-preview",
   "gemini-3.1-flash-lite",
+  "gemini-3.5-flash",
   "gemini-3.5-flash-lite",
   "gemini-3.6-flash",
+  "gemini-3.7-flash",
+  "gemini-3.8-flash",
 ];
 
 // Backend-visible models that have a known route but cannot be reached with a
@@ -99,19 +105,25 @@ const MODEL_METADATA: Record<string, { reasoning: boolean; contextWindow: number
   "claude-opus-4-8":            { reasoning: true,  contextWindow: 1000000, maxTokens: 128000 },
   "claude-opus-5":              { reasoning: true,  contextWindow: 1000000, maxTokens: 128000 },
   "claude-fable-5":             { reasoning: true,  contextWindow: 1000000, maxTokens: 128000 },
+  "claude-fable-5-1":           { reasoning: true,  contextWindow: 1000000, maxTokens: 128000 },
   "openai-gpt-5-2":             { reasoning: true,  contextWindow: 400000,  maxTokens: 32768 },
   "openai-gpt-5-4":             { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
   "openai-gpt-5-5":             { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
   "openai-gpt-5-6-luna":        { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
   "openai-gpt-5-6-terra":       { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
   "openai-gpt-5-6-sol":         { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
+  "openai-gpt-6-astra":         { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
   "grok-4-3":                   { reasoning: true,  contextWindow: 1000000, maxTokens: 32768 },
   "grok-4-5":                   { reasoning: true,  contextWindow: 500000,  maxTokens: 32768 },
+  "grok-4-6":                   { reasoning: true,  contextWindow: 500000,  maxTokens: 32768 },
   "gemini-3-flash-preview":     { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
   "gemini-3.1-pro-preview":     { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
   "gemini-3.1-flash-lite":      { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
+  "gemini-3.5-flash":           { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
   "gemini-3.5-flash-lite":      { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
   "gemini-3.6-flash":           { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
+  "gemini-3.7-flash":           { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
+  "gemini-3.8-flash":           { reasoning: true,  contextWindow: 1048576, maxTokens: 65536 },
 };
 
 const PREFIX_DEFAULTS: Record<string, { reasoning: boolean; contextWindow: number; maxTokens: number }> = {

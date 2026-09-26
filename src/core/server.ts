@@ -38,6 +38,7 @@ const OPENAI_MODEL_MAP: Record<string, string> = {
   "openai-gpt-5-6-luna": "gpt-5.6-luna",
   "openai-gpt-5-6-terra": "gpt-5.6-terra",
   "openai-gpt-5-6-sol": "gpt-5.6-sol",
+  "openai-gpt-6-astra":        "gpt-6-astra",
 };
 
 // xAI models — same OpenAI Responses API surface, but the Grazie backend needs
@@ -45,6 +46,7 @@ const OPENAI_MODEL_MAP: Record<string, string> = {
 const GROK_MODEL_MAP: Record<string, string> = {
   "grok-4-3": "grok-4.3",
   "grok-4-5": "grok-4.5",
+  "grok-4-6": "grok-4.6",
 };
 
 function resolveOpenAIModelId(modelId: string): string {
@@ -71,7 +73,7 @@ function openaiHeaders(authHeader: string): Record<string, string> {
     "Content-Type": "application/json",
     "Accept": "text/event-stream,application/json",
     "Accept-Encoding": "identity",
-    "Grazie-Agent": '{"name":"junie:cli","version":"2144.7"}',
+    "Grazie-Agent": '{"name":"junie:cli","version":"3013.7"}',
     "X-LLM-Model": "openai",
     "X-Keep-Path": "true",
     "Openai-Version": "2020-11-07",
@@ -98,7 +100,7 @@ function anthropicHeaders(authHeader: string): Record<string, string> {
     "Content-Type": "application/json",
     "Accept": "text/event-stream,application/json",
     "Accept-Encoding": "identity",
-    "Grazie-Agent": '{"name":"junie:cli","version":"2144.7"}',
+    "Grazie-Agent": '{"name":"junie:cli","version":"3013.7"}',
     "X-LLM-Model": "anthropic",
     "X-Keep-Path": "true",
     "Openai-Version": "2020-11-07",

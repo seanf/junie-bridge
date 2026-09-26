@@ -125,8 +125,11 @@ Notes:
   bridge does not support) routes via `LlmProvider.AliCloud`, and every
   path/header combination tried returns an empty 404 — it looks gated to
   internal or EAP licences rather than reachable with a subscription token. The
-  same is true for `kimi-k2.5` (Moonshot), which only appears in the JAR, not in
-  the published model list.
+  same is true for `kimi-k2.5` (Moonshot) and the `muse-spark-1.x` models (listed
+  on llm24.net, not in the CLI JAR at all): both only appear in the JAR or
+  IDE-side model lists, and every provider tag tried (openai, anthropic, grok,
+  google, internal-lite-llm, with and without `X-Accept-EAP-License`) answers
+  400 `Unsupported model type` or an empty 404.
 
 ## API Base URL
 
@@ -324,7 +327,7 @@ for m, vals in sorted(models.items()):
 
 The integer values represent `[maxOutputTokens, maxContextTokens]`. When only one value appears, `maxOutputTokens` is null (uses provider default) and the single value is `maxContextTokens`.
 
-### Current capabilities (v2144.7)
+### Current capabilities (v3013.7)
 
 | Model | maxOutput | maxContext | Notes |
 |-------|-----------|------------|-------|
@@ -335,7 +338,9 @@ The integer values represent `[maxOutputTokens, maxContextTokens]`. When only on
 | `claude-opus-4-7` | 128,000 | 1,000,000 | |
 | `claude-opus-4-6` | 128,000 | 1,000,000 | |
 | `claude-fable-5` | 128,000 | 1,000,000 | |
+| `claude-fable-5-1` | 128,000 | 1,000,000 | |
 | `claude-haiku-4-5` | 64,000 | 200,000 | Older model, smaller limits |
+| `openai-gpt-6-astra` | null | 1,000,000 | |
 | `openai-gpt-5-5` | null | 1,000,000 | |
 | `openai-gpt-5-4` | null | 1,000,000 | |
 | `openai-gpt-5-4-mini` | null | 1,000,000 | |
@@ -344,23 +349,35 @@ The integer values represent `[maxOutputTokens, maxContextTokens]`. When only on
 | `openai-gpt-5-2` | null | 400,000 | |
 | `openai-gpt-5-2-*` | null | 400,000 | mini, codex, pro variants |
 
-### Grok and Gemini capabilities (v2530.1)
+### Grok and Gemini capabilities (v3013.7)
 
 | Model | maxOutput | maxContext | in/out $ per 1M |
 |-------|-----------|------------|-----------------|
 | `grok-4.3` | null | 1,000,000 | 1.25 / 2.5 |
 | `grok-4.5` | null | 500,000 | 2.0 / 6.0 |
+| `grok-4.6` | null | 500,000 | 2.0 / 6.0 |
 | `gemini-3-flash-preview` | null | 1,048,576 | 0.5 / 3.0 |
 | `gemini-3.1-pro-preview` | null | 1,048,576 | 2.0 / 12.0 |
 | `gemini-3.1-flash-lite` | null | 1,048,576 | 0.25 / 1.5 |
+| `gemini-3.5-flash` | null | 1,048,576 | 1.5 / 9.0 |
 | `gemini-3.5-flash-lite` | null | 1,048,576 | 0.25 / 1.5 |
-| `gemini-3.6-flash` | null | 1,048,576 | 1.5 / 7.5 |
+| `gemini-3.6-flash` | null | 1,048,576 | 0.75 / 3.75 |
+| `gemini-3.7-flash` | null | 1,048,576 | 0.4 / 2.4 |
+| `gemini-3.8-flash` | null | 1,048,576 | 0.75 / 3.75 |
 
 Careful when reading `ModelCapabilities` from the bytecode: the **last two ints**
 before the `DefaultConstructorMarker` are Kotlin's synthetic default-argument
 bitmasks (e.g. `59352`), not capability values. The Grok/Gemini entries also pass
 `null` for `LLMVision`, yet both accept image input in practice — verified with a
 real 32×32 PNG.
+
+Also: the constructor order is **not uniform**. For some entries the
+`ModelCapabilities` block precedes the model `ldc` (Groks, Geminis), for others
+it follows it (Claudes, GPTs) — grepping a fixed window around one pattern
+silently picks up the *neighbouring* model's values. Segment the disassembly
+on `putstatic … :Lcom/intellij/ml/llm/matterhorn/llm/LLM;` — each model entry
+ends with exactly one such assignment, so each segment holds one
+`new ModelCapabilities` block plus that model's three `ldc` IDs.
 
 ## Probing Models Without the JAR
 
@@ -444,6 +461,7 @@ When updating to a new Junie CLI version:
 
 | Bridge update | Junie CLI version | Changes |
 |--------------|-------------------|---------|
+| 2026-09-17 | v3013.7 (release) | Added `claude-fable-5-1`, `openai-gpt-6-astra`, `grok-4-6`, `gemini-3.5-flash`, `gemini-3.7-flash`, `gemini-3.8-flash` (all verified live). `gemini-3-pro-preview` is in the JAR but the Google publisher 404s it — not added. Noted that unknown Gemini IDs answer Grazie `400 Unsupported model type` while catalogued-but-dead ones answer a publisher `404`, which makes the two states distinguishable. Updated `Grazie-Agent` version to 3013.7. |
 | 2026-07-28 | v2530.1 (nightly) | Added xAI (`grok-4-3`, `grok-4-5`) and Google (5 Gemini 3 models). Both were reachable all along with a plain subscription token — the blocker was routing, not auth: Grok needs `X-LLM-Model: grok` on `/v1/responses` (never `/v1/chat/completions`), Google needs the Vertex-style `generateContent` path. See *Provider Routing*. `deepseek-v4-flash` remains unreachable (AliCloud route returns empty 404s). |
 | 2026-07-27 | v2144.7 | Added `claude-opus-5`. It is served by the Grazie backend before it shows up in the IntelliJ/Junie model picker (same as the gpt-5.6 models were). Found via llm24.net, verified live (see *Probing Models Without the JAR*). |
 | 2026-07-14 | v2144.7 | Route OpenAI models through the OpenAI Responses API (`/v1/responses`) instead of `/v1/chat/completions`, so reasoning effort can be combined with function tools (fixes the `reasoning_effort ... not supported ... in /v1/chat/completions` error on gpt-5.6). OpenAI models now register with `api: "openai-responses"`, `reasoning: true`, and a `thinkingLevelMap`. Added `handleResponses`/`RESPONSES_ALLOWED` in `src/core/server.ts`. |

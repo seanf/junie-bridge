@@ -140,6 +140,7 @@ The list below is mostly in sync with the models Junie itself offers, as publish
 - `claude-opus-4-8`
 - `claude-opus-5`
 - `claude-fable-5`
+- `claude-fable-5-1`
 
 **OpenAI:**
 - `openai-gpt-5-2`
@@ -148,23 +149,27 @@ The list below is mostly in sync with the models Junie itself offers, as publish
 - `openai-gpt-5-6-luna`
 - `openai-gpt-5-6-terra`
 - `openai-gpt-5-6-sol`
+- `openai-gpt-6-astra`
 
 **xAI:**
 - `grok-4-3`
 - `grok-4-5`
+- `grok-4-6`
 
 **Google:**
 - `gemini-3-flash-preview`
 - `gemini-3.1-pro-preview`
 - `gemini-3.1-flash-lite`
+- `gemini-3.5-flash`
 - `gemini-3.5-flash-lite`
 - `gemini-3.6-flash`
+- `gemini-3.7-flash`
+- `gemini-3.8-flash`
 
 Missing models:
-- **`deepseek-v4-flash`** — explicitly blacklisted. JetBrains routes DeepSeek through
-  AliCloud, and every path/header combination tried so far is rejected by the Grazie
-  gateway for subscription OAuth tokens. If the backend returns it, it appears only
-  in diagnostics and is hidden from both hosts.
+- **`deepseek-v4-flash`** — not implemented yet. JetBrains routes DeepSeek through a different backend (AliCloud), and every path/header combination tried so far is rejected by the Grazie gateway for subscription OAuth tokens.
+- **`kimi-k2.5`, `muse-spark-1.x`** — listed on llm24.net but gated to internal/EAP licences; every route tried answers 400/404.
+- **`gemini-3-pro-preview`** — in the Junie JAR, but the Google publisher 404s it (not live).
 - **Older OpenAI generations** (`gpt-5-2025-08-07`, `gpt-5.3-codex`) — reachable, but deliberately left out in favour of the current GPT-5 models.
 - **`gpt`, `grok`, `gemini-pro`, `gemini-flash`** — stale aliases in that list; the backend answers `Model not found` for them.
 
